@@ -1,0 +1,123 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  Reactive tag enforcement. Watches EC2 resource creation via CloudTrail +
+  EventBridge, auto-copies tags from parent resources, and alerts on
+  non-compliant resources via SNS.
+
+Parameters:
+  RequiredTags:
+    Type: String
+    Default: '["Project", "Customer", "Environment"]'
+    Description: JSON array of tag keys that must be present on all resources.
+
+  TeamsWebhookUrl:
+    Type: String
+    Description: Webhook for MS Teams channel message
+
+  ImageUri:
+    Type: String
+    Description: ECR image URI for the Lambda container (e.g. 123456789012.dkr.ecr.eu-north-1.amazonaws.com/taggtraad/validator:latest)
+
+Resources:
+  # --- IAM Role ---
+
+  TaggtraadRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: taggtraad-lambda-role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: TaggtraadPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              # Read tags on any EC2 resource
+              - Effect: Allow
+                Action:
+                  - ec2:DescribeTags
+                Resource: "*"
+              # Write tags — scoped to the current account + region
+              - Effect: Allow
+                Action:
+                  - ec2:CreateTags
+                Resource:
+                  - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/*"
+                  - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:volume/*"
+                  - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:snapshot/*"
+                  - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:image/*"
+
+  # --- Lambda Function ---
+
+  TaggtraadFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: taggtraad-validator
+      PackageType: Image
+      Code:
+        ImageUri: !Ref ImageUri
+      Architectures:
+        - arm64
+      Timeout: 60
+      MemorySize: 128
+      Role: !GetAtt TaggtraadRole.Arn
+      Environment:
+        Variables:
+          REQUIRED_TAGS: !Ref RequiredTags
+          TEAMS_WEBHOOK_URL: !Ref TeamsWebhookUrl
+          DEBUG_WEBHOOK_URL: "https://default9c19ad122e734b3fa65e71f0aef98d.2b.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/dbdd39c5ed4a44d2843269dc01ffd7f6/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=2r1UwYnJTzNP8qwHipaGsgLo9NbE3Xa_qYi5noEvJow"
+          POWERTOOLS_SERVICE_NAME: taggtraad-validator
+          POWERTOOLS_LOG_LEVEL: DEBUG
+
+  # --- EventBridge Rule ---
+  # Matches CloudTrail EC2 creation events. Requires CloudTrail to be
+  # enabled in the account (management events, write-only is sufficient).
+
+  TaggtraadRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: taggtraad-ec2-creation
+      Description: Trigger taggtraad validation on EC2 resource creation
+      State: ENABLED
+      EventPattern:
+        source:
+          - aws.ec2
+        detail-type:
+          - "AWS API Call via CloudTrail"
+        detail:
+          eventSource:
+            - ec2.amazonaws.com
+          eventName:
+            - RunInstances
+            - CreateVolume
+            - CreateImage
+            - CreateSnapshot
+          # Only fire on successful calls
+          errorCode:
+            - exists: false
+      Targets:
+        - Arn: !GetAtt TaggtraadFunction.Arn
+          Id: TaggtraadLambda
+
+  # Permission for EventBridge to invoke the Lambda
+  TaggtraadInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref TaggtraadFunction
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt TaggtraadRule.Arn
+
+Outputs:
+  LambdaArn:
+    Value: !GetAtt TaggtraadFunction.Arn
+
+  EventRuleArn:
+    Value: !GetAtt TaggtraadRule.Arn
