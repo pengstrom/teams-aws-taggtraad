@@ -1,7 +1,7 @@
 import requests as r
-from adaptive_card import *
+from teams.adaptive_card import *
 from pydantic import BaseModel
-import json
+from config import logger
 
 
 class WebhookBody(BaseModel):
@@ -17,8 +17,8 @@ class Webhook:
 
     def send(self, card: AdaptiveCard):
         webhook_body = WebhookBody(attachments=[AdaptiveCardItem(content=card)])
-        body = webhook_body.model_dump(by_alias=True, serialize_as_any=True)
-        print("Body:")
-        print(webhook_body.model_dump_json(indent=2, by_alias=True, serialize_as_any=True))
+        body = webhook_body.model_dump(by_alias=True, serialize_as_any=True, exclude_none=True)
+        logger.debug(body)
         res = r.post(self.url, json=body)
         res.raise_for_status()
+        logger.debug(res)

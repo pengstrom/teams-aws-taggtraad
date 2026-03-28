@@ -1,11 +1,29 @@
-from typing import Optional
+from typing import Annotated, Optional
 
 from pydantic import BaseModel, Field, ConfigDict
 from enum import StrEnum
 
 
+class Layout(BaseModel):
+    type: str
+
+
+class GridArea(BaseModel):
+    name: str
+    column: Optional[int] = None
+    row: Optional[int] = None
+    columnSpan: Optional[int] = None
+
+
+class LayoutAreaGrid(Layout):
+    type: str = "Layout.AreaGrid"
+    columns: list[int]
+    areas: list[GridArea]
+
+
 class Element(BaseModel):
     id: Optional[str] = None
+    showBorder: Optional[bool] = None
     type: str
 
 
@@ -31,6 +49,7 @@ class TextBlockWeight(StrEnum):
 
 class TextBlock(Element):
     type: str = "TextBlock"
+    isVisible: bool = True
     style: Optional[TextBlockStyle] = TextBlockStyle.DEFAULT
     text: str
     size: Optional[TextBlockSize] = TextBlockSize.DEFAULT
@@ -40,10 +59,11 @@ class TextBlock(Element):
 
 class Container(Element):
     model_config = ConfigDict(populate_by_name=True)
-    grid_area: Optional[str] = Field(default=None, alias="grid.area")
+
+    layouts: Optional[list[Layout]] = None
+    grid_area: Annotated[Optional[str], Field(default=None, alias="grid.area")] = None
     type: str = "Container"
     items: list[Element] = []
-    isVisible: bool = True
 
 
 class TableColumn(BaseModel):
@@ -61,8 +81,12 @@ class TableRow(BaseModel):
 
 
 class Table(Element):
+    model_config = ConfigDict(populate_by_name=True)
+
     type: str = "Table"
+    isVisible: Optional[bool] = True
     firstRowAsHeaders: Optional[bool] = True
+    grid_area: Annotated[Optional[str], Field(default=None, alias="grid.area")] = None
     columns: list[TableColumn] = []
     rows: list[TableRow] = []
 
@@ -70,6 +94,7 @@ class Table(Element):
 class Action(BaseModel):
     type: str
     id: str
+    isVisible: bool = True
 
 
 class ActionToggleVisibility(Action):
@@ -80,26 +105,13 @@ class ActionToggleVisibility(Action):
 
 class ActionSet(Element):
     model_config = ConfigDict(populate_by_name=True)
-    grid_area: Optional[str] = Field(default=None, alias="grid.area")
+    grid_area: Annotated[Optional[str], Field(default=None, alias="grid.area")] = None
     type: str = "ActionSet"
     actions: list[Action] = []
 
 
-class Layout(BaseModel):
-    type: str
-
-
-class GridArea(BaseModel):
-    name: str
-    column: Optional[int] = None
-    row: Optional[int] = None
-    columnSpan: Optional[int] = None
-
-
-class LayoutAreaGrid(Layout):
-    type: str = "Layout.AreaGrid"
-    columns: list[int]
-    areas: list[GridArea]
+class TeamsCardProperties(BaseModel):
+    width: Optional[str] = "full"
 
 
 class AdaptiveCard(BaseModel):
@@ -107,6 +119,7 @@ class AdaptiveCard(BaseModel):
     layouts: list[Layout] = []
     type: str = "AdaptiveCard"
     version: str = "1.5"
+    msTeams: Optional[TeamsCardProperties] = TeamsCardProperties()
     schema_: str = Field(
         default="http://adaptivecards.io/schemas/adaptive-card.json", alias="$schema"
     )

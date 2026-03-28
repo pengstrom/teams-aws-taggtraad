@@ -1,11 +1,40 @@
-from config import AppConfig
-from adaptive_card import *
-from teams import *
+from event.envelope import EventBridgeEvent
+from event.cloudtrail import UserIdentity
 
 
-def report_error(cfg: AppConfig, err):
-    text = str(err)
-    client = Webhook(cfg.error_webhook_url)
-    block = TextBlock(text=text)
-    card = AdaptiveCard(body=[block])  # pyright: ignore[reportCallIssue]
-    client.send(card)
+class UnexpectedEventName(Exception):
+    ev: EventBridgeEvent
+
+    def __init__(self, ev: EventBridgeEvent):
+        self.ev = ev
+        super().__init__(
+            f"No handler available for $.detail.eventType: {ev.detail.eventType}"
+        )
+
+
+class UnexpectedUserType(Exception):
+    user_identity: UserIdentity
+
+    def __init__(self, user_identity: UserIdentity):
+        self.user_identity = user_identity
+        super().__init__(
+            f"No handler available for $.detail.userIdentity.type: {user_identity.type}"
+        )
+
+
+class UnexpectedTagResourceType(Exception):
+    resource_type: str
+
+    def __init__(
+        self,
+        resource_type: str,
+    ):
+        self.resource_type = resource_type
+        super().__init__(
+            f"No handler available for $.detail.eventType: {resource_type}"
+        )
+
+
+def handle_unexpected(e: Exception, ev: dict):
+    # teams error channel webhook
+    pass

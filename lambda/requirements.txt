@@ -1,5 +1,7 @@
 aws-lambda-powertools
-# boto3
 pydantic
 requests
 python-dotenv
+pprint == 0.1
+six == 1.12.0
+regex == 2019.11.1
