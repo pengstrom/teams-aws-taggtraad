@@ -1,6 +1,7 @@
 from config import *
 from event.cloudtrail import *
 from event.envelope import EventBridgeEvent
+from business.layout.template import render_template
 from teams import Webhook
 from teams.adaptive_card import *
 from business.tag import *
@@ -142,7 +143,8 @@ def mk_assumed_role_user(u: AssumedRoleUser) -> UserInfo:
 
 
 def send_notification(ev: EventBridgeEvent, report: ComplianceReport):
-    card = mk_teams_card(report)
+    # card = mk_teams_card(report)
+    card = render_template(report)
 
     client = Webhook(config.webhook_url)
     client.send(card)
