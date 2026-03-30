@@ -116,6 +116,7 @@ class TeamsCardProperties(BaseModel):
 
 class AdaptiveCard(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
+    
     layouts: list[Layout] = []
     type: str = "AdaptiveCard"
     version: str = "1.5"
@@ -123,7 +124,7 @@ class AdaptiveCard(BaseModel):
     schema_: str = Field(
         default="http://adaptivecards.io/schemas/adaptive-card.json", alias="$schema"
     )
-    body: list[Element]
+    body: list[dict]
 
 
 class AdaptiveCardItem(BaseModel):

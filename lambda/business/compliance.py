@@ -1,7 +1,7 @@
 from typing import Optional
 
 from pydantic import BaseModel
-from business.tag import TagError
+from model import TagError
 from teams.adaptive_card import Element
 
 

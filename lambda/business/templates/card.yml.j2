@@ -1,0 +1,205 @@
+type: AdaptiveCard
+version: '1.5'
+# '\$schema': 'https://adaptivecards.io/schemas/adaptive-card.json'
+msTeams:
+  width: full
+body:
+  # Top Title columns
+  - type: ColumnSet
+    columns:
+      - type: Column
+        width: 'stretch'
+        items:
+          - type: TextBlock
+            text: Tag Problem
+            style: heading
+          - type: Container
+            items:
+            - type: TextBlock
+              text: '{{ account }}'
+              fontType: Monospace
+            - type: TextBlock
+              text: '{{ region }}'
+              spacing: 'None'
+      - type: Column
+        width: 'auto'
+        targetWidth: 'AtLeast:Standard'
+        verticalContentAlignment: 'Bottom'
+        items:
+          - type: TextBlock
+            text: '{{ user.primary }}'
+            fontType: Monospace
+            weight: 'Bolder'
+            spacing: None
+          - type: TextBlock
+            text: '{{ user.secondary }}'
+            spacing: None
+          - type: TextBlock
+            spacing: None
+            text: '{{ user.type }}'
+  - type: Container
+    targetWidth: 'AtMost:Narrow'
+    items:
+      - type: TextBlock
+        text: '{{ user.primary }}'
+        fontType: Monospace
+        weight: 'Bolder'
+        spacing: None
+      - type: TextBlock
+        text: '{{ user.secondary }}'
+        spacing: None
+      - type: TextBlock
+        spacing: None
+        text: '{{ user.type }}'
+  
+  - type: Container
+    items:
+    {% for r in reports %}
+      - type: Container
+        showBorder: true
+        items:
+        - type: ColumnSet
+          columns:
+            - type: Column
+              width: auto
+              verticalContentAlignment: center
+              targetWidth: 'atLeast:Narrow'
+              items:
+                - type: TextBlock
+                  text: '{{ r.errors | length }}'
+                  style: 'heading'
+            - type: Column
+              width: stretch
+              items:
+                - type: TextBlock
+                  text: '{{ r.type }}: {{ r.id }}'
+                  spacing: None
+                {% if r.parent %}
+                - type: TextBlock
+                  spacing: None
+                  text: {{ r.parent }}
+                {% endif %}
+            - type: Column
+              targetWidth: 'AtLeast:Standard'
+              width: auto
+              verticalContentAlignment: center
+              items:
+                - type: ActionSet
+                  id: toggle-{{ loop.index }}a
+                  actions:
+                    - type: Action.ToggleVisibility
+                      title: 'Show/Hide'
+                      targetElements:
+                        - table-{{ loop.index }}a
+                        - table-{{ loop.index }}b
+        - type: ActionSet
+          id: toggle-{{ loop.index }}b
+          targetWidth: 'AtMost:Narrow'
+          actions:
+            - type: Action.ToggleVisibility
+              title: 'Show/Hide'
+              targetElements:
+                - table-{{ loop.index }}a
+                - table-{{ loop.index }}b
+        - type: Table
+          id: table-{{ loop.index }}a
+          isVisible: false
+          targetWidth: 'atLeast:Standard'
+          columns:
+            - width: auto
+            - width: auto
+            - width: auto
+            - width: 1
+          rows:
+            - type: TableRow
+              cells:
+                - type: TableCell
+                  items:
+                    - type: TextBlock
+                      text: Key
+                      style: columnHeader
+                - type: TableCell
+                  items:
+                    - type: TextBlock
+                      text: Value
+                      style: columnHeader
+                - type: TableCell
+                  items:
+                    - type: TextBlock
+                      text: Error
+                      style: columnHeader
+                - type: TableCell
+                  items:
+                    - type: TextBlock
+                      text: Message
+                      style: columnHeader
+          {% for e in r.errors %}
+            - type: TableRow
+              cells:
+                - type: TableCell
+                  items:
+                    - type: TextBlock
+                      text: '{{ e.key }}'
+                - type: TableCell
+                  items:
+                    - type: TextBlock
+                      text: '{{ e.value }}'
+                - type: TableCell
+                  items:
+                    - type: TextBlock
+                      text: '{{ e.kind }}'
+                - type: TableCell
+                  items:
+                    - type: TextBlock
+                      text: "{{ e.msg }}"
+                      wrap: true
+          {% endfor %}
+        - type: Container
+          id: table-{{ loop.index }}b
+          isVisible: false
+          targetWidth: 'atMost:Narrow'
+          items:
+          {% for e in r.errors %}
+            - type: Container
+              items:
+              - type: TextBlock
+                text: '{{ e.kind }}'
+              - type: TextBlock
+                text: "{{ e.msg }}"
+                wrap: true
+                spacing: 'None'
+              - type: Table
+                firstRowAsHeaders: false
+                spacing: 'Small'
+                columns:
+                  - width: 1
+                  - width: 1
+                rows:
+                  - type: TableRow
+                    cells:
+                      - type: TableCell
+                        items:
+                          - type: TextBlock
+                            text: '{{ e.key }}'
+                      - type: TableCell
+                        items:
+                          - type: TextBlock
+                            text: '{{ e.value }}'
+          {% endfor %}
+
+    {% endfor %}
+  - type: Container
+    items:
+      - type: ActionSet
+        id: toggle-code
+        actions:
+          - type: 'Action.ToggleVisibility'
+            title: 'Show/Hide event'
+            targetElements:
+              - code-1
+      - type: CodeBlock
+        id: code-1
+        isVisible: false
+        language: json
+        codeSnippet: |
+          {{ original | indent(10) }}

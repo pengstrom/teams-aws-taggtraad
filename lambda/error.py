@@ -1,6 +1,8 @@
+from aws_lambda_powertools.utilities.typing import LambdaContext
 from event.envelope import EventBridgeEvent
 from event.cloudtrail import UserIdentity
-
+from config import cfg
+from business.templates import render_error
 
 class UnexpectedEventName(Exception):
     ev: EventBridgeEvent
@@ -35,6 +37,8 @@ class UnexpectedTagResourceType(Exception):
         )
 
 
-def handle_unexpected(e: Exception, ev: dict):
+def handle_unexpected(e: Exception, ev: dict, ctx: LambdaContext):
     # teams error channel webhook
+    card = render_error(e, ev, ctx)
+    cfg.error_client.send(card) 
     pass

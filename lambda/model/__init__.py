@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from pydantic import BaseModel
-from enum import StrEnum, auto
+from enum import StrEnum
 
 
 @dataclass
@@ -18,8 +18,8 @@ def mk_aws_tag(key: str, value: str) -> AWSTag:
 
 
 class Case(StrEnum):
-    UPPER = "UPPER"
-    LOWER = "LOWER"
+    UPPER = "UPPERCASE"
+    LOWER = "LOWERCASE"
     CAPILATIZE = "CAPITALIZE"
 
 
@@ -62,20 +62,21 @@ class TagErrorKind(StrEnum):
 class TagError(BaseModel):
     kind: TagErrorKind
     msg: str
-    tags: list[AWSTag]
+    key: str
+    value: str
 
 
-def mk_key_missing(msg: str, tags: list[AWSTag]):
-    return TagError(kind=TagErrorKind.KEY_MISSING, msg=msg, tags=tags)
+def mk_key_missing(msg: str, tag: AWSTag):
+    return TagError(kind=TagErrorKind.KEY_MISSING, msg=msg, key=tag.Key, value=tag.Value)
 
 
-def mk_key_case_invalid(msg: str, tags: list[AWSTag]):
-    return TagError(kind=TagErrorKind.KEY_CASE_INVALID, msg=msg, tags=tags)
+def mk_key_case_invalid(msg: str, tag: AWSTag):
+    return TagError(kind=TagErrorKind.KEY_CASE_INVALID, msg=msg, key=tag.Key, value=tag.Value)
 
 
-def mk_value_case_invalid(msg: str, tags: list[AWSTag]):
-    return TagError(kind=TagErrorKind.VALUE_CASE_INVALID, msg=msg, tags=tags)
+def mk_value_case_invalid(msg: str, tag: AWSTag):
+    return TagError(kind=TagErrorKind.VALUE_CASE_INVALID, msg=msg, key=tag.Key, value=tag.Value)
 
 
-def mk_value_not_allowed(msg: str, tags: list[AWSTag]):
-    return TagError(kind=TagErrorKind.VALUE_NOT_ALLOWED, msg=msg, tags=tags)
+def mk_value_not_allowed(msg: str, tag: AWSTag):
+    return TagError(kind=TagErrorKind.VALUE_NOT_ALLOWED, msg=msg, key=tag.Key, value=tag.Value)

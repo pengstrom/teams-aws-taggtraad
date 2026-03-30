@@ -1,76 +1,80 @@
 from enum import StrEnum
-import json
 import os
-
-from aws_lambda_powertools import Logger
+import dotenv
+from model import Case
+from teams import Webhook
 
 
 RESULT_NO_ACTION = {"result": "ok", "notify": False}
 RESULT_NOTIFIED = {"result": "ok", "notify": True}
 
 
-logger = Logger()
 
 
 class ConfigKey(StrEnum):
-    REQUIRED_KEYS_KEY = "REQUIRED_KEYS"
-    TEAMS_WEBHOOK_URL_KEY = "TEAMS_WEBHOOK_URL"
+    NOTIFY_WEBHOOK_URL_KEY = "NOTIFY_WEBHOOK_URL"
     ERROR_WEBHOOK_URL_KEY = "ERROR_WEBHOOK_URL"
+    REQUIRED_KEYS_KEY = "REQUIRED_KEYS"
+    KEY_CASE = "KEY_CASE"
+    VALUE_CASE = "VALUE_CASE"
+
+
+def _env_str(k: str) -> str:
+    value = os.environ.get(k)
+    if value is None:
+        raise Exception(
+            f"Could not find {k} in env! Got: '{value}'"
+        )
+    value = value.strip()
+    if value == "":
+        raise Exception(
+            f"Could not parse env var {k} into non-empty string! Got: '{value}'"
+        )
+    return value
+
+def _env_strs(k: str) -> list[str]:
+    value = os.environ.get(k)
+    if value is None:
+        raise Exception(
+            f"Could not find {k} in env! Got: '{value}'"
+        )
+    
+    values = value.split()
+    return values
+
+def _env_case(k: str) -> Case:
+    value = _env_str(k).lower()
+    if value in ["lower", "lowercase"]:
+        return Case.LOWER
+    if value in ["upper", "uppercase"]:
+        return Case.UPPER
+    if value in ["capital", "capitalize", "capitalized"]:
+        return Case.CAPILATIZE
+    
+    raise Exception(f"Env var {k} is not a valid case! Expected one of {[Case.LOWER, Case.UPPER, Case.CAPILATIZE]}, got '{value}'")
 
 
 class AppConfig:
-    webhook_url: str
+    notify_webhook_url: str
     error_webhook_url: str
     req_keys: list[str]
+    key_case: Case
+    value_case: Case
+
+    notify_client: Webhook
+    error_client: Webhook
 
     def __init__(self):
-        req_keys_s = os.environ.get(ConfigKey.REQUIRED_KEYS_KEY)
-        logger.debug(req_keys_s)
-        if req_keys_s is None:
-            raise Exception(
-                f"Could not find {ConfigKey.REQUIRED_KEYS_KEY} in env! Got: '{req_keys_s}'"
-            )
-        try:
-            req_keys = json.loads(req_keys_s)
-        except Exception as err:
-            logger.error(f"Could not JSON parse: '{req_keys_s}'!")
-            raise err
-        if type(req_keys) is not list:
-            raise Exception(
-                f"Could not parse {ConfigKey.REQUIRED_KEYS_KEY} into list! Got: '{req_keys}'"
-            )
-        for k in req_keys:
-            if type(k) is not str:
-                raise Exception(
-                    f"Could not parse {ConfigKey.REQUIRED_KEYS_KEY} into list of strings! Got: '{req_keys}'"
-                )
-        self.req_keys = req_keys
+        dotenv.load_dotenv()
+        self.req_keys = _env_strs(ConfigKey.REQUIRED_KEYS_KEY)
+        self.key_case = _env_case(ConfigKey.KEY_CASE)
+        self.value_case = _env_case(ConfigKey.VALUE_CASE)
 
-        error_webhook_url = os.environ.get(ConfigKey.ERROR_WEBHOOK_URL_KEY)
-        logger.debug(error_webhook_url)
-        if error_webhook_url is None:
-            raise Exception(
-                f"Could not find {ConfigKey.ERROR_WEBHOOK_URL_KEY} in env! Got: '{error_webhook_url}'"
-            )
-        error_webhook_url = error_webhook_url.strip()
-        if error_webhook_url == "":
-            raise Exception(
-                f"Could not parse {ConfigKey.ERROR_WEBHOOK_URL_KEY} into non-empty string! Got: '{error_webhook_url}'"
-            )
-        self.error_webhook_url = error_webhook_url
+        self.notify_webhook_url = _env_str(ConfigKey.NOTIFY_WEBHOOK_URL_KEY)
+        self.error_webhook_url = _env_str(ConfigKey.ERROR_WEBHOOK_URL_KEY)
 
-        webhook_url = os.environ.get(ConfigKey.TEAMS_WEBHOOK_URL_KEY)
-        logger.debug(webhook_url)
-        if webhook_url is None:
-            raise Exception(
-                f"Could not find {ConfigKey.TEAMS_WEBHOOK_URL_KEY} in env! Got: '{webhook_url}'"
-            )
-        webhook_url = webhook_url.strip()
-        if webhook_url == "":
-            raise Exception(
-                f"Could not parse {ConfigKey.TEAMS_WEBHOOK_URL_KEY} into non-empty string! Got: '{webhook_url}'"
-            )
-        self.webhook_url = webhook_url
+        self.notify_client = Webhook(self.notify_webhook_url)
+        self.error_client = Webhook(self.error_webhook_url)
 
 
-config = AppConfig()
+cfg = AppConfig()

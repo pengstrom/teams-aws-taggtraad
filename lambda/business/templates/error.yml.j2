@@ -1,0 +1,26 @@
+type: AdaptiveCard
+version: '1.5'
+# '\$schema': 'https://adaptivecards.io/schemas/adaptive-card.json'
+msTeams:
+  width: full
+body:
+  - type: TextBlock
+    text: Error
+    style: heading
+  - type: CodeBlock
+    codeSnippet: |
+      {{ error | indent(6) }}
+  - type: TextBlock
+    text: Event
+    style: heading
+  - type: CodeBlock
+    language: json
+    codeSnippet: |
+      {{ event | indent(6) }}
+  - type: TextBlock
+    text: Context
+    style: heading
+  - type: CodeBlock
+    language: json
+    codeSnippet: |
+      {{ ctx | indent(6) }}

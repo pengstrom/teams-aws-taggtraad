@@ -35,7 +35,7 @@ class UserType(StrEnum):
 
 
 class UserIdentityBase(BaseModel):
-    type: str
+    # type: str
     principalId: str
     arn: str
     accountId: str

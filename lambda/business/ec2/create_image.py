@@ -1,9 +1,9 @@
 from event.ec2 import CreateImageEvent
 from business.compliance import *
-from business.tag import AWSTag, Case
+from model import AWSTag, Case
 from error import *
 from business import Tagger, TagConfig
-from config import config
+from config import cfg
 
 
 def mk_create_image_report(ev: CreateImageEvent) -> list[ResourceCompliance]:
@@ -22,7 +22,7 @@ def mk_create_image_report(ev: CreateImageEvent) -> list[ResourceCompliance]:
             else:
                 raise UnexpectedTagResourceType(ts.resourceType)
 
-    tagger = Tagger(TagConfig(config.req_keys, Case.CAPILATIZE, Case.LOWER))
+    tagger = Tagger(TagConfig(cfg.req_keys, Case.CAPILATIZE, Case.LOWER))
     image_errors = tagger.validate(image_tags)
     snapshot_errors = tagger.validate(snapshot_tags)
 

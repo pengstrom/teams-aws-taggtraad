@@ -17,12 +17,13 @@ import os
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
+from aws_lambda_powertools.utilities.typing import LambdaContext
 
 TEST_DIR = Path(__file__).parent
 
 
 @dataclass
-class FakeLambdaContext:
+class FakeLambdaContext(LambdaContext):
     function_name: str = "local-test"
     function_version: str = "$LATEST"
     invoked_function_arn: str = "arn:aws:lambda:eu-north-1:000000000000:function:local-test"

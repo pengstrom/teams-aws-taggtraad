@@ -1,0 +1,101 @@
+{
+    "detail": {
+        "userIdentity": {
+            "type": "AssumedRole",
+            "principalId": "AROA53QW5XUZZ6Q46UEST:per.engstrom@nwise.se",
+            "arn": "arn:aws:sts::952457084211:assumed-role/AWSReservedSSO_AdministratorAccess_b74a4c021349e18c/per.engstrom@nwise.se",
+            "accountId": "952457084211",
+            "accessKeyId": "ASIA53QW5XUZX7CGCILC",
+            "sessionContext": {
+                "sessionIssuer": {
+                    "type": "Role",
+                    "principalId": "AROA53QW5XUZZ6Q46UEST",
+                    "arn": "arn:aws:iam::952457084211:role/aws-reserved/sso.amazonaws.com/eu-west-1/AWSReservedSSO_AdministratorAccess_b74a4c021349e18c",
+                    "accountId": "952457084211",
+                    "userName": "AWSReservedSSO_AdministratorAccess_b74a4c021349e18c"
+                },
+                "attributes": {
+                    "creationDate": "2026-03-25T09:52:22Z",
+                    "mfaAuthenticated": "false"
+                }
+            }
+        },
+        "eventTime": "2026-03-25T16:30:25Z",
+        "eventSource": "ec2.amazonaws.com",
+        "awsRegion": "eu-north-1",
+        "sourceIPAddress": "13.53.34.220",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:148.0) Gecko/20100101 Firefox/148.0",
+        "requestParameters": {
+            "instanceId": "i-0eb658a9365c53ad1",
+            "name": "peen.nwise.se-test-tagg",
+            "noReboot": true,
+            "blockDeviceMapping": {
+                "items": [
+                    {
+                        "deviceName": "/dev/sda1",
+                        "ebs": {
+                            "volumeSize": 100,
+                            "deleteOnTermination": true
+                        }
+                    }
+                ]
+            },
+            "tagSpecificationSet": {
+                "items": [
+                    {
+                        "resourceType": "image",
+                        "tags": [
+                            {
+                                "key": "Foo",
+                                "value": "bar"
+                            },
+                            {
+                                "key": "baz",
+                                "value": "  Quuz"
+                            }
+                        ]
+                    },
+                    {
+                        "resourceType": "snapshot",
+                        "tags": [
+                            {
+                                "key": "Foo",
+                                "value": "bar"
+                            },
+                            {
+                                "key": "baz",
+                                "value": "  Quuz"
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        "responseElements": {
+            "requestId": "3578b088-b346-4814-802a-73a75f62b946",
+            "imageId": "ami-0a3716ae54ca4bd2a"
+        },
+        "requestID": "3578b088-b346-4814-802a-73a75f62b946",
+        "eventID": "ba9b5666-0ceb-4c4c-a733-f85ce183b2e3",
+        "readOnly": false,
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "952457084211",
+        "eventCategory": "Management",
+        "tlsDetails": {
+            "tlsVersion": "TLSv1.3",
+            "cipherSuite": "TLS_AES_128_GCM_SHA256",
+            "clientProvidedHostHeader": "ec2.eu-north-1.amazonaws.com"
+        },
+        "sessionCredentialFromConsole": "true"
+    },
+    "detail_type": "AWS API Call via CloudTrail",
+    "get_id": "503ccd72-caf8-193f-f82e-b7d1528696a8",
+    "raw_event": "[SENSITIVE]",
+    "region": "eu-north-1",
+    "replay_name": "[Cannot be deserialized]",
+    "resources": [],
+    "source": "aws.ec2",
+    "time": "2026-03-25T16:30:25Z",
+    "version": "0"
+}
